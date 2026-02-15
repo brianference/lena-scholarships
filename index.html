@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lena's Scholarship Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #e0e0e0;
+      padding: 20px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    
+    header {
+      text-align: center;
+      padding: 30px 0;
+      margin-bottom: 30px;
+    }
+    h1 { 
+      font-size: 2.5em; 
+      background: linear-gradient(90deg, #00d4ff, #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .subtitle { color: #888; font-size: 1.1em; }
+    
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    .stat-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      backdrop-filter: blur(10px);
+    }
+    .stat-value { font-size: 2.5em; font-weight: bold; color: #00d4ff; }
+    .stat-label { color: #888; margin-top: 5px; }
+    
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 10px 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.05);
+      color: #e0e0e0;
+      border-radius: 25px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .filter-btn:hover, .filter-btn.active {
+      background: linear-gradient(90deg, #00d4ff, #7c3aed);
+      border-color: transparent;
+      color: white;
+    }
+    
+    .view-toggle {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .view-btn {
+      padding: 12px 25px;
+      border: none;
+      background: rgba(255,255,255,0.1);
+      color: #e0e0e0;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    .view-btn.active {
+      background: linear-gradient(90deg, #7c3aed, #00d4ff);
+      color: white;
+    }
+    
+    .deadline-section {
+      margin-bottom: 40px;
+    }
+    .deadline-header {
+      font-size: 1.3em;
+      color: #00d4ff;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .deadline-header.urgent { color: #ff4757; }
+    .deadline-header.soon { color: #ffa502; }
+    
+    .scholarship-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 20px;
+    }
+    
+    .scholarship-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .scholarship-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+    .scholarship-card.high-priority {
+      border-color: #00d4ff;
+      box-shadow: 0 0 20px rgba(0,212,255,0.2);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+    .card-title {
+      font-size: 1.1em;
+      font-weight: 600;
+      color: #fff;
+      flex: 1;
+    }
+    .card-amount {
+      font-size: 1.4em;
+      font-weight: bold;
+      color: #00ff88;
+    }
+    
+    .card-org {
+      color: #888;
+      font-size: 0.9em;
+      margin-bottom: 15px;
+    }
+    
+    .card-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+    .metric {
+      background: rgba(255,255,255,0.05);
+      padding: 10px;
+      border-radius: 8px;
+    }
+    .metric-label { font-size: 0.8em; color: #888; }
+    .metric-value { font-weight: 600; margin-top: 3px; }
+    
+    .effort-bar {
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      margin-top: 5px;
+      overflow: hidden;
+    }
+    .effort-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.5s;
+    }
+    .effort-1 { width: 20%; background: #00ff88; }
+    .effort-2 { width: 40%; background: #7bed9f; }
+    .effort-3 { width: 60%; background: #ffa502; }
+    .effort-4 { width: 80%; background: #ff6348; }
+    .effort-5 { width: 100%; background: #ff4757; }
+    
+    .score-badge {
+      position: absolute;
+      top: 15px;
+      right: 15px;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    .score-high { background: linear-gradient(135deg, #00ff88, #00d4ff); color: #1a1a2e; }
+    .score-med { background: linear-gradient(135deg, #ffa502, #ff6348); color: #1a1a2e; }
+    .score-low { background: rgba(255,255,255,0.2); color: #888; }
+    
+    .deadline-badge {
+      display: inline-block;
+      padding: 5px 12px;
+      border-radius: 15px;
+      font-size: 0.85em;
+      font-weight: 600;
+    }
+    .deadline-urgent { background: rgba(255,71,87,0.2); color: #ff4757; }
+    .deadline-soon { background: rgba(255,165,2,0.2); color: #ffa502; }
+    .deadline-ok { background: rgba(0,255,136,0.2); color: #00ff88; }
+    
+    .requirements {
+      font-size: 0.85em;
+      color: #aaa;
+      margin-top: 10px;
+    }
+    .requirements li {
+      margin: 3px 0;
+      padding-left: 15px;
+      position: relative;
+    }
+    .requirements li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: #00d4ff;
+    }
+    
+    .card-actions {
+      margin-top: 15px;
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    .btn-primary {
+      background: linear-gradient(90deg, #00d4ff, #7c3aed);
+      color: white;
+    }
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: #e0e0e0;
+    }
+    .btn:hover { transform: scale(1.02); }
+    
+    .calendar-view {
+      display: none;
+    }
+    .calendar-view.active { display: block; }
+    
+    .timeline {
+      position: relative;
+      padding-left: 30px;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 10px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(180deg, #00d4ff, #7c3aed);
+    }
+    .timeline-item {
+      position: relative;
+      margin-bottom: 25px;
+      padding: 20px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+    }
+    .timeline-item::before {
+      content: "";
+      position: absolute;
+      left: -26px;
+      top: 25px;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #00d4ff;
+      border: 3px solid #1a1a2e;
+    }
+    .timeline-date {
+      font-size: 0.9em;
+      color: #00d4ff;
+      margin-bottom: 5px;
+    }
+    .timeline-title { font-weight: 600; }
+    .timeline-amount { color: #00ff88; font-weight: bold; }
+    
+    .quick-wins {
+      background: linear-gradient(135deg, rgba(0,255,136,0.1), rgba(0,212,255,0.1));
+      border: 1px solid rgba(0,255,136,0.3);
+      border-radius: 16px;
+      padding: 25px;
+      margin-bottom: 30px;
+    }
+    .quick-wins h2 {
+      color: #00ff88;
+      margin-bottom: 15px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .quick-wins h2::before { content: "⚡"; }
+    
+    @media (max-width: 768px) {
+      .scholarship-grid { grid-template-columns: 1fr; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      h1 { font-size: 1.8em; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎓 Lena's Scholarship Dashboard</h1>
+      <p class="subtitle">ASU Accounting/Finance • Merit-Based Focus</p>
+    </header>
+    
+    <div class="stats-bar">
+      <div class="stat-card">
+        <div class="stat-value" id="total-value">$0</div>
+        <div class="stat-label">Total Potential</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="total-count">0</div>
+        <div class="stat-label">Scholarships</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="urgent-count">0</div>
+        <div class="stat-label">Due This Month</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="quick-wins">0</div>
+        <div class="stat-label">Quick Wins</div>
+      </div>
+    </div>
+    
+    <div class="filters">
+      <button class="filter-btn active" data-filter="all">All</button>
+      <button class="filter-btn" data-filter="high-priority">🔥 High Priority</button>
+      <button class="filter-btn" data-filter="quick-wins">⚡ Quick Wins</button>
+      <button class="filter-btn" data-filter="women">👩 Women in Accounting</button>
+      <button class="filter-btn" data-filter="no-essay">📝 No Essay</button>
+      <button class="filter-btn" data-filter="asu">🔱 ASU Specific</button>
+    </div>
+    
+    <div class="view-toggle">
+      <button class="view-btn active" data-view="score">💰 Best ROI</button>
+      <button class="view-btn" data-view="deadline">📅 By Deadline</button>
+    </div>
+    
+    <div id="quick-wins-section" class="quick-wins">
+      <h2>Quick Wins - High $ / Low Effort</h2>
+      <div class="scholarship-grid" id="quick-wins-grid"></div>
+    </div>
+    
+    <div id="main-content">
+      <div class="scholarship-grid" id="scholarship-grid"></div>
+    </div>
+    
+    <div id="calendar-content" class="calendar-view">
+      <div class="timeline" id="timeline"></div>
+    </div>
+  </div>
+  
+  <script>
+    let scholarships = [];
+    
+    async function loadData() {
+      try {
+        const response = await fetch('./data/scholarships.json');
+        const data = await response.json();
+        scholarships = data.scholarships;
+        renderDashboard();
+      } catch (e) {
+        console.error('Failed to load data:', e);
+        // Fallback to inline data
+        scholarships = getInlineData();
+        renderDashboard();
+      }
+    }
+    
+    function getInlineData() {
+      return [
+        { id: 1, name: "PCAOB Scholars Program", organization: "PCAOB", amount: 15000, amountDisplay: "$15,000", deadline: "2026-03-01", effort: 2, effortNotes: "School nomination required", requirements: ["3.3+ GPA", "School nomination"], priority: "HIGH", eligibilityMatch: 100, category: "accounting" },
+        { id: 2, name: "Niche $25K No-Essay", organization: "Niche", amount: 25000, amountDisplay: "$25,000", deadline: "2026-03-31", effort: 1, effortNotes: "Just create profile", requirements: ["Create profile"], priority: "HIGH", eligibilityMatch: 100, category: "no-essay" },
+        { id: 3, name: "Bold.org Be Bold", organization: "Bold.org", amount: 25000, amountDisplay: "$25,000", deadline: "2026-03-31", effort: 1, effortNotes: "No essay", requirements: ["Create profile"], priority: "HIGH", eligibilityMatch: 100, category: "no-essay" },
+        { id: 4, name: "GFOA Scholarships", organization: "GFOA", amount: 17500, amountDisplay: "$5K-$30K", deadline: "2026-02-28", effort: 3, requirements: ["Essay", "2 recommendations"], priority: "HIGH", eligibilityMatch: 95, category: "finance" },
+        { id: 5, name: "IMA Student Scholarship", organization: "IMA", amount: 7500, amountDisplay: "Up to $7,500", deadline: "2026-02-15", effort: 2, requirements: ["IMA membership", "Short essay"], priority: "HIGH", eligibilityMatch: 95, category: "accounting" },
+        { id: 6, name: "Furst Honors (ASU)", organization: "W.P. Carey", amount: 10000, amountDisplay: "$10,000", deadline: "2026-02-01", effort: 3, requirements: ["ASU student", "3.5+ GPA"], priority: "HIGH", eligibilityMatch: 100, category: "asu-specific" },
+        { id: 7, name: "EFWA Undergraduate", organization: "EFWA", amount: 4000, amountDisplay: "$2K-$6K", deadline: "2026-04-30", effort: 3, requirements: ["Women", "Essay"], priority: "HIGH", eligibilityMatch: 100, category: "women-accounting" },
+        { id: 8, name: "Arizona Society of CPAs", organization: "ASCPA", amount: 3000, amountDisplay: "$3,000", deadline: "2026-04-01", effort: 2, requirements: ["AZ resident/ASU"], priority: "HIGH", eligibilityMatch: 100, category: "state-cpa" },
+        { id: 9, name: "Scholarships360 No-Essay", organization: "Scholarships360", amount: 10000, amountDisplay: "$10,000", deadline: "2026-03-31", effort: 1, requirements: ["Profile"], priority: "HIGH", eligibilityMatch: 100, category: "no-essay" },
+        { id: 10, name: "Deloitte Foundation", organization: "Deloitte", amount: 5000, amountDisplay: "$5,000", deadline: "2026-04-15", effort: 3, requirements: ["3.0+ GPA", "Essay"], priority: "MEDIUM", eligibilityMatch: 90, category: "big4" }
+      ];
+    }
+    
+    function calculateScore(s) {
+      // Higher amount = better, lower effort = better, higher eligibility = better
+      const amountScore = Math.min(s.amount / 5000, 5); // 0-5 points
+      const effortScore = (6 - s.effort); // 1-5 points (inverted)
+      const eligibilityScore = s.eligibilityMatch / 20; // 0-5 points
+      return Math.round((amountScore + effortScore + eligibilityScore) / 3 * 33);
+    }
+    
+    function getDaysUntil(deadline) {
+      const today = new Date();
+      const dueDate = new Date(deadline);
+      return Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+    }
+    
+    function renderDashboard() {
+      // Calculate stats
+      const totalValue = scholarships.reduce((sum, s) => sum + s.amount, 0);
+      const urgentCount = scholarships.filter(s => getDaysUntil(s.deadline) <= 30).length;
+      const quickWinsCount = scholarships.filter(s => s.effort <= 2 && s.amount >= 5000).length;
+      
+      document.getElementById('total-value').textContent = '$' + totalValue.toLocaleString();
+      document.getElementById('total-count').textContent = scholarships.length;
+      document.getElementById('urgent-count').textContent = urgentCount;
+      document.getElementById('quick-wins').textContent = quickWinsCount;
+      
+      // Render quick wins
+      const quickWins = scholarships
+        .filter(s => s.effort <= 2 && s.amount >= 5000)
+        .sort((a, b) => calculateScore(b) - calculateScore(a))
+        .slice(0, 3);
+      renderGrid('quick-wins-grid', quickWins);
+      
+      // Render main grid (sorted by score)
+      const sorted = [...scholarships].sort((a, b) => calculateScore(b) - calculateScore(a));
+      renderGrid('scholarship-grid', sorted);
+      
+      // Setup filters
+      setupFilters();
+      setupViews();
+    }
+    
+    function renderGrid(containerId, items) {
+      const container = document.getElementById(containerId);
+      container.innerHTML = items.map(s => {
+        const score = calculateScore(s);
+        const days = getDaysUntil(s.deadline);
+        const deadlineClass = days <= 14 ? 'urgent' : days <= 30 ? 'soon' : 'ok';
+        const scoreClass = score >= 70 ? 'high' : score >= 50 ? 'med' : 'low';
+        
+        return `
+          <div class="scholarship-card ${s.priority === 'HIGH' ? 'high-priority' : ''}" data-category="${s.category}" data-effort="${s.effort}" data-priority="${s.priority}">
+            <div class="score-badge score-${scoreClass}">${score}</div>
+            <div class="card-header">
+              <div>
+                <div class="card-title">${s.name}</div>
+                <div class="card-org">${s.organization}</div>
+              </div>
+            </div>
+            <div class="card-amount">${s.amountDisplay}</div>
+            <div class="card-metrics">
+              <div class="metric">
+                <div class="metric-label">Deadline</div>
+                <div class="metric-value">
+                  <span class="deadline-badge deadline-${deadlineClass}">${days}d</span>
+                </div>
+              </div>
+              <div class="metric">
+                <div class="metric-label">Effort</div>
+                <div class="effort-bar"><div class="effort-fill effort-${s.effort}"></div></div>
+              </div>
+            </div>
+            <ul class="requirements">
+              ${(s.requirements || []).map(r => `<li>${r}</li>`).join('')}
+            </ul>
+            <div class="card-actions">
+              <button class="btn btn-primary" onclick="window.open('${s.url || '#'}', '_blank')">Apply</button>
+              <button class="btn btn-secondary" onclick="markStatus(${s.id})">Track</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function setupFilters() {
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          const filter = btn.dataset.filter;
+          let filtered = scholarships;
+          
+          if (filter === 'high-priority') {
+            filtered = scholarships.filter(s => s.priority === 'HIGH');
+          } else if (filter === 'quick-wins') {
+            filtered = scholarships.filter(s => s.effort <= 2);
+          } else if (filter === 'women') {
+            filtered = scholarships.filter(s => s.category === 'women-accounting' || s.category === 'women-business');
+          } else if (filter === 'no-essay') {
+            filtered = scholarships.filter(s => s.category === 'no-essay');
+          } else if (filter === 'asu') {
+            filtered = scholarships.filter(s => s.category === 'asu-specific' || s.category === 'state-cpa');
+          }
+          
+          renderGrid('scholarship-grid', filtered.sort((a, b) => calculateScore(b) - calculateScore(a)));
+        });
+      });
+    }
+    
+    function setupViews() {
+      document.querySelectorAll('.view-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          const view = btn.dataset.view;
+          if (view === 'deadline') {
+            document.getElementById('main-content').style.display = 'none';
+            document.getElementById('calendar-content').classList.add('active');
+            renderTimeline();
+          } else {
+            document.getElementById('main-content').style.display = 'block';
+            document.getElementById('calendar-content').classList.remove('active');
+          }
+        });
+      });
+    }
+    
+    function renderTimeline() {
+      const sorted = [...scholarships].sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+      const timeline = document.getElementById('timeline');
+      
+      timeline.innerHTML = sorted.map(s => {
+        const date = new Date(s.deadline);
+        const days = getDaysUntil(s.deadline);
+        return `
+          <div class="timeline-item">
+            <div class="timeline-date">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })} (${days} days)</div>
+            <div class="timeline-title">${s.name}</div>
+            <div class="timeline-amount">${s.amountDisplay}</div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function markStatus(id) {
+      alert('Status tracking coming soon! For now, note this scholarship in your tracking sheet.');
+    }
+    
+    loadData();
+  </script>
+</body>
+</html>
