@@ -515,61 +515,183 @@
       color: var(--accent);
     }
     
-    /* Timeline */
+    /* Timeline - Calendar View */
     .timeline {
-      position: relative;
-      padding-left: 28px;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
     }
     
-    .timeline::before {
-      content: "";
-      position: absolute;
-      left: 8px;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: var(--gradient-primary);
-      border-radius: var(--radius-full);
-    }
-    
-    .timeline-item {
-      position: relative;
+    .timeline-month {
       margin-bottom: var(--space-md);
-      padding: var(--space-md);
-      border-left: 3px solid var(--primary);
     }
     
-    .timeline-item::before {
+    .timeline-month-header {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+      margin-bottom: var(--space-md);
+      padding-bottom: var(--space-sm);
+      border-bottom: 2px solid var(--border);
+    }
+    
+    .timeline-month-name {
+      font-size: 1.25rem;
+      font-weight: 700;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .timeline-month-count {
+      background: var(--bg-tertiary);
+      padding: 4px 12px;
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    
+    .timeline-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: var(--space-md);
+    }
+    
+    .timeline-card {
+      padding: var(--space-lg);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .timeline-card::before {
       content: "";
       position: absolute;
-      left: -23px;
-      top: var(--space-md);
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
       background: var(--primary);
-      box-shadow: 0 0 0 4px var(--bg-primary);
     }
     
-    .timeline-item.urgent { border-left-color: var(--danger); }
-    .timeline-item.urgent::before { background: var(--danger); }
-    .timeline-item.soon { border-left-color: var(--warning); }
-    .timeline-item.soon::before { background: var(--warning); }
+    .timeline-card.urgent::before { background: var(--danger); }
+    .timeline-card.soon::before { background: var(--warning); }
+    .timeline-card.ok::before { background: var(--success); }
     
-    .timeline-date {
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: var(--space-sm);
+    }
+    
+    .timeline-date-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: var(--radius-full);
       font-size: 0.85rem;
-      color: var(--accent);
-      font-weight: 500;
+      font-weight: 600;
     }
     
-    .timeline-title {
-      font-weight: 600;
-      margin: var(--space-xs) 0;
+    .timeline-date-badge.urgent {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+    }
+    
+    .timeline-date-badge.soon {
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--warning);
+    }
+    
+    .timeline-date-badge.ok {
+      background: rgba(16, 185, 129, 0.15);
+      color: var(--success);
     }
     
     .timeline-amount {
-      color: var(--success);
+      font-size: 1.1rem;
       font-weight: 700;
+      color: var(--success);
+    }
+    
+    .timeline-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--text-primary);
+    }
+    
+    .timeline-org {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: var(--space-sm);
+    }
+    
+    .timeline-meta {
+      display: flex;
+      gap: var(--space-md);
+      margin-top: var(--space-sm);
+      padding-top: var(--space-sm);
+      border-top: 1px solid var(--border);
+    }
+    
+    .timeline-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+    
+    .timeline-effort {
+      display: flex;
+      gap: 2px;
+    }
+    
+    .timeline-effort span {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      background: var(--bg-tertiary);
+    }
+    
+    .timeline-effort span.filled {
+      background: var(--accent);
+    }
+    
+    .timeline-checkbox {
+      margin-top: var(--space-sm);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    
+    .timeline-checkbox input {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--success);
+    }
+    
+    .timeline-checkbox label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+    }
+    
+    .timeline-card.is-applied {
+      opacity: 0.5;
+    }
+    
+    .timeline-card.is-applied .timeline-title {
+      text-decoration: line-through;
+    }
+    
+    @media (max-width: 768px) {
+      .timeline-cards {
+        grid-template-columns: 1fr;
+      }
     }
     
     /* No Results */
@@ -971,20 +1093,70 @@
         return;
       }
       
-      el.innerHTML = list.map(s => {
-        const days = getDays(s.deadline);
-        const cls = days <= 14 ? 'urgent' : days <= 30 ? 'soon' : '';
-        const dText = days < 0 ? 'PASSED' : days === 0 ? 'TODAY' : `${days} days`;
-        const date = new Date(s.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      // Group by month
+      const grouped = {};
+      list.forEach(s => {
+        const d = new Date(s.deadline);
+        const key = d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        if (!grouped[key]) grouped[key] = [];
+        grouped[key].push(s);
+      });
+      
+      el.innerHTML = Object.entries(grouped).map(([month, items]) => {
+        const cards = items.map(s => {
+          const days = getDays(s.deadline);
+          const cls = days < 0 ? 'expired' : days <= 14 ? 'urgent' : days <= 30 ? 'soon' : 'ok';
+          const dText = days < 0 ? 'PASSED' : days === 0 ? 'TODAY!' : days === 1 ? 'TOMORROW' : `${days} days`;
+          const date = new Date(s.deadline).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          const isApplied = appliedIds.includes(s.id);
+          const effort = s.effort || 3;
+          
+          return `
+            <div class="timeline-card glass-card ${cls} ${isApplied ? 'is-applied' : ''}" data-id="${s.id}">
+              <div class="timeline-header">
+                <span class="timeline-date-badge ${cls}">📅 ${date} · ${dText}</span>
+                <span class="timeline-amount">${s.amountDisplay}</span>
+              </div>
+              <div class="timeline-title">${s.name}</div>
+              <div class="timeline-org">${s.organization}</div>
+              <div class="timeline-meta">
+                <div class="timeline-meta-item">
+                  <span>Effort:</span>
+                  <div class="timeline-effort">
+                    ${[1,2,3,4,5].map(i => `<span class="${i <= effort ? 'filled' : ''}"></span>`).join('')}
+                  </div>
+                </div>
+                <div class="timeline-meta-item">
+                  ${s.priority === 'HIGH' ? '🔥 High Priority' : ''}
+                </div>
+              </div>
+              <div class="timeline-checkbox">
+                <input type="checkbox" id="tl-applied-${s.id}" data-id="${s.id}" ${isApplied ? 'checked' : ''}>
+                <label for="tl-applied-${s.id}">${isApplied ? '✓ Applied' : 'Mark as Applied'}</label>
+              </div>
+            </div>
+          `;
+        }).join('');
         
         return `
-          <div class="timeline-item glass-card ${cls}">
-            <div class="timeline-date">${date} (${dText})</div>
-            <div class="timeline-title">${s.name}</div>
-            <div class="timeline-amount">${s.amountDisplay}</div>
+          <div class="timeline-month">
+            <div class="timeline-month-header">
+              <span class="timeline-month-name">${month}</span>
+              <span class="timeline-month-count">${items.length} scholarship${items.length > 1 ? 's' : ''}</span>
+            </div>
+            <div class="timeline-cards">${cards}</div>
           </div>
         `;
       }).join('');
+      
+      // Add checkbox handlers for timeline
+      el.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.onclick = e => {
+          e.stopPropagation();
+          const id = parseInt(cb.dataset.id);
+          toggleApplied(id);
+        };
+      });
     }
   </script>
 </body>
