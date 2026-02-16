@@ -733,28 +733,38 @@
     let searchQuery = '';
     let appliedIds = JSON.parse(localStorage.getItem('appliedScholarships') || '[]');
     
+    // Helper: check if deadline has passed
+    function isExpired(s) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      return new Date(s.deadline) < today;
+    }
+    
+    // Helper: still active (not expired)
+    function isActive(s) { return !isExpired(s); }
+    
     const FILTERS = {
-      'all': { label: 'All', test: () => true },
-      'pending': { label: '⏳ Pending', test: s => !appliedIds.includes(s.id) },
+      'all': { label: 'All', test: s => isActive(s) },
+      'expired': { label: '🕐 Expired', test: s => isExpired(s) },
+      'pending': { label: '⏳ Pending', test: s => isActive(s) && !appliedIds.includes(s.id) },
       'applied': { label: '✅ Applied', test: s => appliedIds.includes(s.id) },
-      'high': { label: '🔥 High Priority', test: s => s.priority === 'HIGH' },
-      'quick': { label: '⚡ Quick Wins', test: s => (s.effort || 3) <= 2 && s.amount >= 2000 },
-      'women': { label: '👩 Women', test: s => 
+      'high': { label: '🔥 High Priority', test: s => isActive(s) && s.priority === 'HIGH' },
+      'quick': { label: '⚡ Quick Wins', test: s => isActive(s) && (s.effort || 3) <= 2 && s.amount >= 2000 },
+      'women': { label: '👩 Women', test: s => isActive(s) && (
         s.category === 'women-accounting' || 
         s.category === 'women-business' ||
         (s.requirements && s.requirements.some(r => r.toLowerCase().includes('women')))
-      },
-      'noessay': { label: '📝 No Essay', test: s => s.category === 'no-essay' },
-      'asu': { label: '🔱 ASU/Arizona', test: s => 
+      )},
+      'noessay': { label: '📝 No Essay', test: s => isActive(s) && s.category === 'no-essay' },
+      'asu': { label: '🔱 ASU/Arizona', test: s => isActive(s) && (
         s.category === 'asu-specific' || 
         s.category === 'state-cpa' ||
         s.name.toLowerCase().includes('arizona') ||
         s.organization.toLowerCase().includes('arizona')
-      },
-      'big4': { label: '🏢 Big 4', test: s => 
+      )},
+      'big4': { label: '🏢 Big 4', test: s => isActive(s) && (
         s.category === 'big4' ||
         ['deloitte', 'pwc', 'ey ', 'ernst', 'kpmg'].some(f => s.organization.toLowerCase().includes(f))
-      }
+      )}
     };
     
     document.addEventListener('DOMContentLoaded', init);
@@ -885,13 +895,15 @@
     }
     
     function updateStats() {
-      const total = allScholarships.reduce((s, x) => s + x.amount, 0);
-      const urgent = allScholarships.filter(s => getDays(s.deadline) <= 30).length;
-      const quick = allScholarships.filter(s => (s.effort || 3) <= 2 && s.amount >= 2000).length;
+      const active = allScholarships.filter(isActive);
+      const total = active.reduce((s, x) => s + x.amount, 0);
+      const urgent = active.filter(s => getDays(s.deadline) <= 30).length;
+      const quick = active.filter(s => (s.effort || 3) <= 2 && s.amount >= 2000).length;
       const applied = appliedIds.length;
+      const expired = allScholarships.filter(isExpired).length;
       
       document.getElementById('statTotal').textContent = '$' + total.toLocaleString();
-      document.getElementById('statCount').textContent = allScholarships.length;
+      document.getElementById('statCount').textContent = active.length + (expired ? ` (${expired} expired)` : '');
       document.getElementById('statUrgent').textContent = urgent;
       document.getElementById('statQuickWins').textContent = quick;
       document.getElementById('statApplied').textContent = applied;
