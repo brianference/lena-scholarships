@@ -723,16 +723,171 @@
       100% { background-position: -200% 0; }
     }
     
-    /* Responsive */
+    /* ========================================
+       MOBILE-FIRST UX OPTIMIZATION
+       Senior UX Designer: Minimize chrome, maximize content
+       Goal: See first scholarship card within 1 scroll
+       ======================================== */
+    
     @media (max-width: 768px) {
-      .container { padding: var(--space-sm); }
-      .header-controls { position: static; justify-content: center; margin-bottom: var(--space-md); }
-      header { padding: var(--space-lg) 0; }
-      .scholarship-grid { grid-template-columns: 1fr; }
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .stat-card { padding: var(--space-md); }
-      .filters { gap: var(--space-xs); }
-      .filter-btn { padding: var(--space-xs) var(--space-sm); font-size: 0.8rem; }
+      .container { padding: var(--space-xs); }
+      
+      /* Compact header - single line */
+      header { 
+        padding: var(--space-sm) 0; 
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        text-align: left;
+      }
+      
+      .header-controls { 
+        position: static; 
+        margin: 0;
+      }
+      
+      h1 { 
+        font-size: 1.1rem; 
+        margin: 0;
+      }
+      
+      .subtitle { display: none; } /* Hide on mobile */
+      
+      .theme-toggle {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+      
+      /* Search - compact */
+      .search-container { 
+        margin-bottom: var(--space-sm); 
+      }
+      
+      .search-input {
+        min-height: 40px;
+        padding: var(--space-sm) var(--space-sm) var(--space-sm) 40px;
+        font-size: 0.9rem;
+      }
+      
+      .search-icon { left: var(--space-sm); font-size: 1rem; }
+      
+      /* Stats - collapsible summary bar */
+      .stats-grid { 
+        display: flex;
+        overflow-x: auto;
+        gap: var(--space-xs);
+        margin-bottom: var(--space-sm);
+        padding-bottom: var(--space-xs);
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      
+      .stats-grid::-webkit-scrollbar { display: none; }
+      
+      .stat-card { 
+        padding: var(--space-sm) var(--space-md);
+        flex-shrink: 0;
+        min-width: auto;
+      }
+      
+      .stat-value { font-size: 1rem; line-height: 1.2; }
+      .stat-label { font-size: 0.7rem; }
+      
+      /* Filters - horizontal scroll, single row */
+      .filters-container { 
+        margin-bottom: var(--space-sm);
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: var(--bg-primary);
+        padding: var(--space-xs) 0;
+      }
+      
+      .filters { 
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        gap: var(--space-xs);
+        padding-bottom: var(--space-xs);
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      
+      .filters::-webkit-scrollbar { display: none; }
+      
+      .filter-btn { 
+        padding: 6px 10px;
+        font-size: 0.75rem;
+        min-height: 32px;
+        flex-shrink: 0;
+        white-space: nowrap;
+      }
+      
+      .filter-count {
+        padding: 1px 5px;
+        font-size: 0.7rem;
+      }
+      
+      /* View toggle - compact */
+      .view-toggle {
+        margin-top: var(--space-xs);
+      }
+      
+      .view-btn {
+        padding: 6px 12px;
+        font-size: 0.8rem;
+        min-height: 32px;
+      }
+      
+      /* Cards grid */
+      .scholarship-grid { 
+        grid-template-columns: 1fr;
+        gap: var(--space-sm);
+      }
+      
+      /* Card optimizations */
+      .scholarship-card { 
+        border-radius: var(--radius-md);
+      }
+      
+      .card-content { padding: var(--space-md); }
+      .card-title { font-size: 0.95rem; }
+      .card-amount { font-size: 1.1rem; }
+      .score-badge { width: 40px; height: 40px; font-size: 0.85rem; }
+      
+      /* Applied toggle - smaller */
+      .applied-toggle {
+        margin-top: var(--space-sm);
+        padding-top: var(--space-sm);
+      }
+      
+      .applied-toggle input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+      }
+      
+      .applied-toggle label { font-size: 0.8rem; }
+      
+      /* Timeline mobile */
+      .timeline-month-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: var(--space-xs);
+      }
+      
+      .timeline-month-name { font-size: 1rem; }
+      .timeline-card { padding: var(--space-md); }
+      .timeline-title { font-size: 0.9rem; }
+      .timeline-cards { gap: var(--space-sm); }
+    }
+    
+    /* Extra small screens */
+    @media (max-width: 380px) {
+      h1 { font-size: 1rem; }
+      .stat-card { padding: var(--space-xs) var(--space-sm); }
+      .stat-value { font-size: 0.9rem; }
+      .filter-btn { padding: 4px 8px; font-size: 0.7rem; }
     }
     
     /* Print Styles */
