@@ -619,6 +619,55 @@
       .theme-toggle, .search-container, .filters-container, .view-toggle { display: none; }
       .glass-card { background: white; border: 1px solid #ddd; }
     }
+    
+    /* Applied Checkbox */
+    .applied-toggle {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      margin-top: var(--space-md);
+      padding-top: var(--space-md);
+      border-top: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .applied-toggle input[type="checkbox"] {
+      width: 24px;
+      height: 24px;
+      accent-color: var(--success);
+      cursor: pointer;
+    }
+    
+    .applied-toggle label {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      flex: 1;
+    }
+    
+    .applied-toggle:hover label {
+      color: var(--text-primary);
+    }
+    
+    .scholarship-card.is-applied {
+      opacity: 0.6;
+      border-color: var(--success);
+    }
+    
+    .scholarship-card.is-applied .applied-toggle label {
+      color: var(--success);
+      font-weight: 600;
+    }
+    
+    .applied-badge {
+      background: var(--success);
+      color: white;
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      margin-left: auto;
+    }
   </style>
 </head>
 <body>
@@ -654,6 +703,10 @@
         <div class="stat-value" id="statQuickWins">0</div>
         <div class="stat-label">Quick Wins</div>
       </div>
+      <div class="stat-card glass-card">
+        <div class="stat-value" id="statApplied" style="color: var(--success)">0</div>
+        <div class="stat-label">Applied</div>
+      </div>
     </div>
     
     <div class="filters-container">
@@ -678,9 +731,12 @@
     let currentFilter = 'all';
     let currentView = 'score';
     let searchQuery = '';
+    let appliedIds = JSON.parse(localStorage.getItem('appliedScholarships') || '[]');
     
     const FILTERS = {
       'all': { label: 'All', test: () => true },
+      'pending': { label: '⏳ Pending', test: s => !appliedIds.includes(s.id) },
+      'applied': { label: '✅ Applied', test: s => appliedIds.includes(s.id) },
       'high': { label: '🔥 High Priority', test: s => s.priority === 'HIGH' },
       'quick': { label: '⚡ Quick Wins', test: s => (s.effort || 3) <= 2 && s.amount >= 2000 },
       'women': { label: '👩 Women', test: s => 
@@ -776,6 +832,27 @@
       document.getElementById('viewScore').onclick = () => switchView('score');
       document.getElementById('viewDeadline').onclick = () => switchView('deadline');
       document.getElementById('searchInput').oninput = e => { searchQuery = e.target.value.toLowerCase(); render(); };
+      
+      // Handle applied checkbox clicks via event delegation
+      document.getElementById('scholarshipGrid').onclick = e => {
+        const checkbox = e.target.closest('input[type="checkbox"]');
+        if (!checkbox) return;
+        const id = parseInt(checkbox.dataset.id);
+        toggleApplied(id);
+      };
+    }
+    
+    function toggleApplied(id) {
+      const idx = appliedIds.indexOf(id);
+      if (idx === -1) {
+        appliedIds.push(id);
+      } else {
+        appliedIds.splice(idx, 1);
+      }
+      localStorage.setItem('appliedScholarships', JSON.stringify(appliedIds));
+      buildFilterBar();
+      updateStats();
+      render();
     }
     
     function switchView(view) {
@@ -811,11 +888,13 @@
       const total = allScholarships.reduce((s, x) => s + x.amount, 0);
       const urgent = allScholarships.filter(s => getDays(s.deadline) <= 30).length;
       const quick = allScholarships.filter(s => (s.effort || 3) <= 2 && s.amount >= 2000).length;
+      const applied = appliedIds.length;
       
       document.getElementById('statTotal').textContent = '$' + total.toLocaleString();
       document.getElementById('statCount').textContent = allScholarships.length;
       document.getElementById('statUrgent').textContent = urgent;
       document.getElementById('statQuickWins').textContent = quick;
+      document.getElementById('statApplied').textContent = applied;
     }
     
     function render() {
@@ -836,9 +915,10 @@
         const dClass = days <= 14 ? 'urgent' : days <= 30 ? 'soon' : 'ok';
         const sClass = score >= 70 ? 'high' : score >= 45 ? 'med' : 'low';
         const dText = days < 0 ? 'PASSED' : days === 0 ? 'TODAY' : `${days}d`;
+        const isApplied = appliedIds.includes(s.id);
         
         return `
-          <article class="scholarship-card glass-card ${s.priority === 'HIGH' ? 'high-priority' : ''}">
+          <article class="scholarship-card glass-card ${s.priority === 'HIGH' ? 'high-priority' : ''} ${isApplied ? 'is-applied' : ''}">
             <div class="card-content">
               <div class="score-badge score-${sClass}" title="ROI Score">${score}</div>
               <div class="card-header">
@@ -858,6 +938,11 @@
                 </div>
               </div>
               <ul class="requirements">${(s.requirements || []).slice(0, 3).map(r => `<li>${r}</li>`).join('')}</ul>
+              <div class="applied-toggle">
+                <input type="checkbox" id="applied-${s.id}" data-id="${s.id}" ${isApplied ? 'checked' : ''}>
+                <label for="applied-${s.id}">${isApplied ? 'Applied ✓' : 'Mark as Applied'}</label>
+                ${isApplied ? '<span class="applied-badge">DONE</span>' : ''}
+              </div>
             </div>
           </article>
         `;
